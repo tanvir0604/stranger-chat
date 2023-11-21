@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Document</title>
+</head>
+<body class="flex flex-col items-center justify-center w-screen min-h-screen bg-gray-100 text-gray-800 lg:p-10">
+
+<!-- Component Start -->
+<div id="stranger" class="text-gray-300 bg-slate-900 flex flex-col flex-grow w-full max-w-xl shadow-xl lg:rounded-lg overflow-hidden relative">
+    <div class="text-center mt-2 subpixel-antialiased text-2xl">STRAN<span class="text-sky-800 font-bold text-3xl">CHAT</span></div>
+    <div class="text-center text-sky-600"><small>{{notification}}</small></div>
+    <div class="text-end text-xs p-2 text-lime-500 absolute top-1 right-1">{{onlineUsers}} online</div>
+    <div class="bg-slate-950 flex flex-col flex-grow h-0 p-4 overflow-auto mt-2" v-if="step == 1">
+        <p class="mb-10 mt-5 text-gray-400 text-xs">
+            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquam aliquid commodi cum, doloribus explicabo iste labore laborum magnam necessitatibus nostrum nulla obcaecati quae, quisquam quos repellat rerum, ut voluptate voluptates.
+        </p>
+        <h3 class="mb-4 font-bold text-gray-300">I am</h3>
+        <div class="flex items-center mb-3">
+            <input type="radio" value="1" name="gender"  class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" v-model="gender">
+            <label class="ml-2 text-xs text-gray-300">Man</label>
+        </div>
+        <div class="flex items-center">
+            <input type="radio" value="2" name="gender" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" v-model="gender">
+            <label class="ml-2 text-xs text-gray-300">Woman</label>
+        </div>
+
+        <h3 class="mb-4 mt-5 font-bold text-gray-300">Interested to</h3>
+        <div class="flex items-center mb-3">
+            <input type="radio" value="1" name="genderPreference" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" v-model="genderPreference">
+            <label class="ml-2 text-xs text-gray-300">Man</label>
+        </div>
+        <div class="flex items-center">
+            <input type="radio" value="2" name="genderPreference" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" v-model="genderPreference">
+            <label class="ml-2 text-xs text-gray-300">Woman</label>
+        </div>
+
+        <button v-if="!started" class="bg-sky-700 hover:bg-sky-800 p-2 rounded-lg mt-10 text-white" @click="startMatching">Start Chatting</button>
+        <button v-else class="bg-red-700 hover:bg-red-800 p-2 rounded-lg mt-10 text-white" @click="stopMatching">Stop Matching</button>
+    </div>
+    <div id="chat-window" class="bg-slate-950 flex flex-col flex-grow h-0 p-4 overflow-auto mt-2" v-else>
+        <div v-if="!started && matching" class="text-center text-3xl font-bold m-auto text-gray-500">Waiting for partner to be joined...</div>
+        <div v-if="!started && !matching" class="text-center text-3xl font-bold m-auto text-gray-500">Click start to start matching...</div>
+        <template v-for="item in messages">
+            <div class="flex w-full mt-2 space-x-3 max-w-xs" v-if="item.type == 1">
+                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-300 p-1 opacity-60">
+                    <img v-if="item.gender == 1" src="./img/male.png" alt="">
+                    <img v-else src="./img/female.png" alt="">
+                </div>
+                <div>
+                    <div class="bg-gray-300 p-2 rounded-r-lg rounded-bl-lg text-gray-800">
+                        <p class="text-xs font-bold">{{item.msg}}</p>
+                    </div>
+                    <span class="text-xs text-gray-500 leading-none">{{ timeSince(item.created) }}</span>
+                </div>
+            </div>
+            <div class="flex w-full mt-2 space-x-3 max-w-xs ml-auto justify-end" v-else>
+                <div>
+                    <div class="bg-blue-600 text-gray-300 p-2 rounded-l-lg rounded-br-lg">
+                        <p class="text-xs font-bold">{{item.msg}}</p>
+                    </div>
+                    <span class="text-xs text-gray-500 leading-none">{{ timeSince(item.created) }}</span>
+                </div>
+                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-300 p-1 opacity-60">
+                    <img v-if="item.gender == 1" src="./img/male.png" alt="">
+                    <img v-else src="./img/female.png" alt="">
+                </div>
+            </div>
+        </template>
+        <div ref="scrollElement"></div>
+    </div>
+
+    <form @submit.prevent="sendMessage">
+    <div class="flex gap-1 bg-slate-800 p-1" v-if="step != 1">
+
+            <div class="flex-none w-14">
+                <button type="button" v-if="matching || started" @click="stopMatching" class="bg-red-800 hover:bg-red-900 items-center h-12 w-full rounded px-3 text-sm">stop</button>
+                <button type="button" v-else @click="startMatching" class="bg-lime-800 hover:bg-lime-900 items-center h-12 w-full rounded px-3 text-sm">start</button>
+            </div>
+            <div class="grow w-72">
+                <input :disabled="!started" class="flex items-center h-12 w-full rounded px-3 text-sm bg-gray-900" type="text" placeholder="Type your message…" v-model="message" ref="messageInput">
+            </div>
+            <div class="flex-none w-14">
+                <button type="submit" class="bg-sky-800 hover:bg-sky-900 items-center h-12 w-full rounded px-3 text-sm">send</button>
+            </div>
+
+    </div>
+    </form>
+</div>
+<!-- Component End  -->
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io();
+    const { createApp, ref } = Vue
+    const stranger = createApp({
+        setup() {
+            let messages = ref([]);
+            let message = ref('');
+            let gender = ref(1);
+            let genderPreference = ref(2);
+            let onlineUsers = ref(0)
+            let step = ref(1)
+            let partner = ref(null)
+            let notification = ref('Ready to start?')
+            let started = ref(false)
+            let scrollElement = ref(null)
+            let matching = ref(false)
+            let messageInput = ref(null)
+
+            sendMessage = () => {
+                if(message.value.trim() == '') return false;
+                // console.log(message.value);
+                let data = {msg: message.value, gender: gender.value};
+                socket.emit('message', data);
+                messages.value.push({type: 1, gender: data.gender, msg: data.msg, created: new Date()});
+                message.value = '';
+                messageInput.value.focus();
+                setTimeout(function(){
+                    scrollElement.value.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+
+            };
+            receiveMessage = (res) => {
+                messages.value.push({type: 2, gender: res.gender, msg: res.msg, created: new Date()});
+                setTimeout(function(){
+                    scrollElement.value.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            };
+            setOnlineUsers = (count) => {
+                onlineUsers.value = count;
+            };
+            startMatching = () => {
+                socket.emit('process', {type:1, gender: gender.value, genderPreference: genderPreference.value});
+                matching.value = true;
+                started.value = false;
+                step.value = 2;
+            };
+            setNotification = (msg) => {
+                notification.value = msg;
+            };
+            processStep = (msg) => {
+                // console.log(msg);
+                if(msg.type == 1){
+                    // found match
+                    partner.value = msg.partner;
+                    started.value = true;
+                    matching.value = false;
+                }else if(msg.type == 2){
+                    // stopped
+                    partner.value = null;
+                    started.value = false;
+                    matching.value = false;
+                    messages.value = [];
+                    message.value = null;
+                }
+
+            };
+            stopMatching = () => {
+                socket.emit('process', {type:2});
+                messages.value = [];
+                message.value = null;
+                started.value = false;
+                matching.value = false;
+            };
+            timeSince = (date) => {
+
+                var seconds = Math.floor((new Date() - date) / 1000);
+
+                var interval = seconds / 31536000;
+
+                if (interval > 1) {
+                    return Math.floor(interval) + " years";
+                }
+                interval = seconds / 2592000;
+                if (interval > 1) {
+                    return Math.floor(interval) + " months";
+                }
+                interval = seconds / 86400;
+                if (interval > 1) {
+                    return Math.floor(interval) + " days";
+                }
+                interval = seconds / 3600;
+                if (interval > 1) {
+                    return Math.floor(interval) + " hours";
+                }
+                interval = seconds / 60;
+                if (interval > 1) {
+                    return Math.floor(interval) + " minutes";
+                }
+                return Math.floor(seconds) + " seconds";
+            };
+            return {
+                messages,
+                message,
+                gender,
+                genderPreference,
+                onlineUsers,
+                step,
+                partner,
+                notification,
+                started,
+                scrollElement,
+                matching,
+                messageInput,
+
+                sendMessage,
+                receiveMessage,
+                setOnlineUsers,
+                startMatching,
+                setNotification,
+                processStep,
+                stopMatching,
+                timeSince
+            };
+        }
+    }).mount('#stranger');
+
+    socket.on('message', (msg) => {
+        stranger.receiveMessage(msg);
+    });
+    socket.on('notification', (msg) => {
+        // console.log(msg);
+        stranger.setNotification(msg);
+    });
+    socket.on('user-count', (msg) => {
+        stranger.setOnlineUsers(msg);
+    });
+    socket.on('process', (msg) => {
+        stranger.processStep(msg);
+    })
+</script>
+</body>
+</html>

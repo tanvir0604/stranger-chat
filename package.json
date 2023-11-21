@@ -1,0 +1,26 @@
+{
+  "name": "StranChat",
+  "version": "0.0.1",
+  "description": "meet stranger to share thoughts with ease",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "keywords": [
+    "talktostranger",
+    "meetstranger",
+    "chat",
+    "video",
+    "audio",
+    "call"
+  ],
+  "author": "Md Shafkat Hussain Tanvir",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "geoip-country": "^4.2.36",
+    "mongodb": "^6.2.0",
+    "socket.io": "^4.7.2"
+  }
+}
